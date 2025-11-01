@@ -82,7 +82,7 @@ struct TrainerMon
 
 #define TRAINER_PARTY(partyArray) partyArray, .partySize = ARRAY_COUNT(partyArray)
 
-enum TrainerBattleType 
+enum TrainerBattleType
 {
     TRAINER_BATTLE_TYPE_SINGLES,
     TRAINER_BATTLE_TYPE_DOUBLES,
@@ -310,6 +310,11 @@ static inline const struct TrainerMon *GetTrainerPartyFromId(u16 trainerId)
 static inline const u64 GetTrainerAIFlagsFromId(u16 trainerId)
 {
     return GetTrainerStructFromId(trainerId)->aiFlags;
+}
+
+static inline const u8 GetTrainerDynamicPartyLevelFromId(u16 trainerId)
+{
+    return GetTrainerStructFromId(trainerId)->dynamicLevelRatio;
 }
 
 #endif // GUARD_DATA_H
