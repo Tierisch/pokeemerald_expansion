@@ -219,13 +219,15 @@ Route101_EventScript_BirchsBag::
 	lock
 	faceplayer
 	setflag FLAG_SYS_POKEMON_GET
+	callnative StartNewPokeballCaseUI
+	waitstate
 	setflag FLAG_RESCUED_BIRCH
 	fadescreen FADE_TO_BLACK
 	removeobject LOCALID_ROUTE101_ZIGZAGOON
 	setobjectxy LOCALID_PLAYER, 6, 13
 	applymovement LOCALID_PLAYER, Common_Movement_WalkInPlaceFasterLeft
 	waitmovement 0
-	special ChooseStarter
+	special StartFirstBattleAfterStarter
 	waitstate
 	applymovement LOCALID_ROUTE101_BIRCH, Route101_Movement_BirchApproachPlayer
 	waitmovement 0

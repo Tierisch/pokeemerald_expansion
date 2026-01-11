@@ -885,6 +885,14 @@ static void CB2_GiveStarter(void)
     BattleTransition_Start(B_TRANSITION_BLUR);
 }
 
+void StartFirstBattleAfterStarter(void)
+{
+    ResetTasks();
+    PlayBattleBGM();
+    SetMainCallback2(CB2_StartFirstBattle);
+    BattleTransition_Start(B_TRANSITION_BLUR);
+}
+
 static void CB2_StartFirstBattle(void)
 {
     UpdatePaletteFade();
