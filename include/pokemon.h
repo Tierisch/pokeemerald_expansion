@@ -817,7 +817,7 @@ u32 GetGMaxTargetSpecies(u32 species);
 bool32 DoesMonMeetAdditionalConditions(struct Pokemon *mon, const struct EvolutionParam *params, struct Pokemon *tradePartner, u32 partyId, bool32 *canStopEvo, enum EvoState evoState);
 u32 GetEvolutionTargetSpecies(struct Pokemon *mon, enum EvolutionMode mode, u16 evolutionItem, struct Pokemon *tradePartner, bool32 *canStopEvo, enum EvoState evoState);
 bool8 IsMonPastEvolutionLevel(struct Pokemon *mon);
-u16 GetSpeciesBasedOnLevel(u16 species, u8 level);
+u16 GetSpeciesBasedOnLevel(u16 species, u8 level, bool8 isWildBattle);
 u16 NationalPokedexNumToSpecies(enum NationalDexOrder nationalNum);
 enum HoennDexOrder NationalToHoennOrder(enum NationalDexOrder nationalNum);
 enum NationalDexOrder SpeciesToNationalPokedexNum(u16 species);

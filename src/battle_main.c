@@ -1960,7 +1960,7 @@ u8 CreateNPCTrainerPartyFromTrainer(struct Pokemon *party, const struct Trainer 
             {
                 level += (partyMaxLevel - npcTrainerPartyMaxLevel);
                 // Check if species should have evolved based on the scaled level
-                species = GetSpeciesBasedOnLevel(species, level);
+                species = GetSpeciesBasedOnLevel(species, level, FALSE);
             }
 
             if (trainer->battleType != TRAINER_BATTLE_TYPE_SINGLES)

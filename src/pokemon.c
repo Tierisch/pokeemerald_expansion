@@ -4955,8 +4955,9 @@ bool8 IsMonPastEvolutionLevel(struct Pokemon *mon)
 // Species lists for conditional evolution chances.
 // These determine the probability of evolutions that aren't simple level triggers.
 
+// Wild encounter evolution chances
 // High chance (50%)
-static const u16 sConditionalEvoHighChance[] = {
+static const u16 sConditionalEvoHighChance_Wild[] = {
     SPECIES_WURMPLE,
     SPECIES_AZURILL,
     SPECIES_HAPPINY,
@@ -4967,7 +4968,7 @@ static const u16 sConditionalEvoHighChance[] = {
 };
 
 // Low chance (10%)
-static const u16 sConditionalEvoLowChance[] = {
+static const u16 sConditionalEvoLowChance_Wild[] = {
     SPECIES_GOLBAT,
     SPECIES_PIKACHU,
     SPECIES_CHANSEY,
@@ -4983,19 +4984,48 @@ static const u16 sConditionalEvoLowChance[] = {
     SPECIES_CLAMPERL,
 };
 
-static u8 GetConditionalEvolutionChance(u16 species)
+// Trainer battle evolution chances
+// High chance (50%)
+static const u16 sConditionalEvoHighChance_Trainer[] = {
+    SPECIES_WURMPLE,
+    SPECIES_AZURILL,
+    SPECIES_HAPPINY,
+    SPECIES_TOGEPI,
+    SPECIES_IGGLYBUFF,
+    SPECIES_CLEFFA,
+    SPECIES_PICHU,
+};
+
+// Low chance (10%)
+static const u16 sConditionalEvoLowChance_Trainer[] = {
+    SPECIES_PIKACHU,
+    SPECIES_CHANSEY,
+    SPECIES_KADABRA,
+    SPECIES_MACHOKE,
+    SPECIES_GRAVELER,
+    SPECIES_HAUNTER,
+    SPECIES_ONIX,
+    SPECIES_SCYTHER,
+    SPECIES_SEADRA,
+};
+
+static u8 GetConditionalEvolutionChance(u16 species, bool8 isWildBattle)
 {
     u32 i;
+    const u16 *highChanceList = isWildBattle ? sConditionalEvoHighChance_Wild : sConditionalEvoHighChance_Trainer;
+    const u16 *lowChanceList = isWildBattle ? sConditionalEvoLowChance_Wild : sConditionalEvoLowChance_Trainer;
+    u32 highChanceCount = isWildBattle ? ARRAY_COUNT(sConditionalEvoHighChance_Wild) : ARRAY_COUNT(sConditionalEvoHighChance_Trainer);
+    u32 lowChanceCount = isWildBattle ? ARRAY_COUNT(sConditionalEvoLowChance_Wild) : ARRAY_COUNT(sConditionalEvoLowChance_Trainer);
     
-    for (i = 0; i < ARRAY_COUNT(sConditionalEvoHighChance); i++)
+    for (i = 0; i < highChanceCount; i++)
     {
-        if (sConditionalEvoHighChance[i] == species)
+        if (highChanceList[i] == species)
             return 2;
     }
     
-    for (i = 0; i < ARRAY_COUNT(sConditionalEvoLowChance); i++)
+    for (i = 0; i < lowChanceCount; i++)
     {
-        if (sConditionalEvoLowChance[i] == species)
+        if (lowChanceList[i] == species)
             return 10;
     }
     
@@ -5007,7 +5037,7 @@ static u8 GetConditionalEvolutionChance(u16 species)
 // that would have occurred at or before the given level.
 // If no level-based evolution exists, GetConditionalEvolutionChance to potentially pick from
 // evolutions with special conditions. Returns the original species if no evolution occurs.
-u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
+u16 GetSpeciesBasedOnLevel(u16 species, u8 level, bool8 isWildBattle)
 {
     int i;
     u16 evolvedSpecies = species;
@@ -5024,7 +5054,7 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
             if (evolutions[i].param <= level)
             {
                 // Check if this evolution would result in an even higher level evolution
-                u16 nextEvolution = GetSpeciesBasedOnLevel(evolutions[i].targetSpecies, level);
+                u16 nextEvolution = GetSpeciesBasedOnLevel(evolutions[i].targetSpecies, level, isWildBattle);
                 evolvedSpecies = nextEvolution;
             }
         }
@@ -5050,7 +5080,7 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
         }
     }
 
-    u8 evolutionChance = GetConditionalEvolutionChance(species);
+    u8 evolutionChance = GetConditionalEvolutionChance(species, isWildBattle);
     if (evolutionCount > 0 && (Random() % evolutionChance) == 0)
     {
         // Pick a random evolution from the available ones
@@ -5073,7 +5103,7 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
                 if (currentIndex == chosenEvolution)
                 {
                     // Recursively check if this species can evolve further based on level
-                    return GetSpeciesBasedOnLevel(evolutions[i].targetSpecies, level);
+                    return GetSpeciesBasedOnLevel(evolutions[i].targetSpecies, level, isWildBattle);
                 }
                 currentIndex++;
             }

@@ -610,7 +610,7 @@ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum 
         return FALSE;
 
     // Check if species should have evolved based on the scaled level
-    u16 species = GetSpeciesBasedOnLevel(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    u16 species = GetSpeciesBasedOnLevel(wildMonInfo->wildPokemon[wildMonIndex].species, level, TRUE);
     CreateWildMon(species, level);
     return TRUE;
 }
@@ -622,7 +622,7 @@ static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 
     u8 level = ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, WILD_AREA_FISHING);
 
     // Check if species should have evolved based on the scaled level
-    wildMonSpecies = GetSpeciesBasedOnLevel(wildMonSpecies, level);
+    wildMonSpecies = GetSpeciesBasedOnLevel(wildMonSpecies, level, TRUE);
 
     UpdateChainFishingStreak();
     CreateWildMon(wildMonSpecies, level);
