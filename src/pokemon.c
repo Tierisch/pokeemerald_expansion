@@ -4952,9 +4952,61 @@ bool8 IsMonPastEvolutionLevel(struct Pokemon *mon)
     return FALSE;
 }
 
+// Species lists for conditional evolution chances.
+// These determine the probability of evolutions that aren't simple level triggers.
+
+// High chance (50%)
+static const u16 sConditionalEvoHighChance[] = {
+    SPECIES_WURMPLE,
+    SPECIES_AZURILL,
+    SPECIES_HAPPINY,
+    SPECIES_TOGEPI,
+    SPECIES_IGGLYBUFF,
+    SPECIES_CLEFFA,
+    SPECIES_PICHU,
+};
+
+// Low chance (10%)
+static const u16 sConditionalEvoLowChance[] = {
+    SPECIES_GOLBAT,
+    SPECIES_PIKACHU,
+    SPECIES_CHANSEY,
+    SPECIES_KADABRA,
+    SPECIES_MACHOKE,
+    SPECIES_GRAVELER,
+    SPECIES_HAUNTER,
+    SPECIES_POLIWHIRL,
+    SPECIES_SLOWPOKE,
+    SPECIES_ONIX,
+    SPECIES_SCYTHER,
+    SPECIES_SEADRA,
+    SPECIES_CLAMPERL,
+};
+
+static u8 GetConditionalEvolutionChance(u16 species)
+{
+    u32 i;
+    
+    for (i = 0; i < ARRAY_COUNT(sConditionalEvoHighChance); i++)
+    {
+        if (sConditionalEvoHighChance[i] == species)
+            return 2;
+    }
+    
+    for (i = 0; i < ARRAY_COUNT(sConditionalEvoLowChance); i++)
+    {
+        if (sConditionalEvoLowChance[i] == species)
+            return 10;
+    }
+    
+    // Default chance (25%)
+    return 4;
+}
+
 // Get the evolved species if the given species has a simple level-based evolution
 // that would have occurred at or before the given level.
-// Returns the original species if no level-based evolution is found.
+// If no level-based evolution exists, GetConditionalEvolutionChance to potentially pick from
+// evolutions with special conditions. Returns the original species if no evolution occurs.
 u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
 {
     int i;
@@ -4963,14 +5015,10 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
 
     if (evolutions == NULL)
         return species;
-
-    // Look for the highest level evolution that has been reached
     for (i = 0; evolutions[i].method != EVOLUTIONS_END; i++)
     {
         if (SanitizeSpeciesId(evolutions[i].targetSpecies) == SPECIES_NONE)
             continue;
-
-        // Only consider EVO_LEVEL with no additional conditions
         if (evolutions[i].method == EVO_LEVEL && evolutions[i].params == NULL)
         {
             if (evolutions[i].param <= level)
@@ -4982,7 +5030,57 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
         }
     }
 
-    return evolvedSpecies;
+    if (evolvedSpecies != species)
+        return evolvedSpecies;
+
+    u32 evolutionCount = 0;
+    for (i = 0; evolutions[i].method != EVOLUTIONS_END; i++)
+    {
+        if (SanitizeSpeciesId(evolutions[i].targetSpecies) == SPECIES_NONE)
+            continue;
+        
+        if (evolutions[i].method != EVO_NONE && evolutions[i].method != EVO_SPLIT_FROM_EVO)
+        {
+            if (evolutions[i].method == EVO_LEVEL && evolutions[i].params == NULL)
+                continue;
+            if (evolutions[i].method == EVO_LEVEL_BATTLE_ONLY && evolutions[i].params == NULL)
+                continue;
+            
+            evolutionCount++;
+        }
+    }
+
+    u8 evolutionChance = GetConditionalEvolutionChance(species);
+    if (evolutionCount > 0 && (Random() % evolutionChance) == 0)
+    {
+        // Pick a random evolution from the available ones
+        u32 chosenEvolution = Random() % evolutionCount;
+        u32 currentIndex = 0;
+        
+        for (i = 0; evolutions[i].method != EVOLUTIONS_END; i++)
+        {
+            if (SanitizeSpeciesId(evolutions[i].targetSpecies) == SPECIES_NONE)
+                continue;
+            
+            if (evolutions[i].method != EVO_NONE && evolutions[i].method != EVO_SPLIT_FROM_EVO)
+            {
+                // Skip simple level evolutions
+                if (evolutions[i].method == EVO_LEVEL && evolutions[i].params == NULL)
+                    continue;
+                if (evolutions[i].method == EVO_LEVEL_BATTLE_ONLY && evolutions[i].params == NULL)
+                    continue;
+                
+                if (currentIndex == chosenEvolution)
+                {
+                    // Recursively check if this species can evolve further based on level
+                    return GetSpeciesBasedOnLevel(evolutions[i].targetSpecies, level);
+                }
+                currentIndex++;
+            }
+        }
+    }
+
+    return species;
 }
 
 u16 NationalPokedexNumToSpecies(enum NationalDexOrder nationalNum)
