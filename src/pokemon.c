@@ -4952,6 +4952,39 @@ bool8 IsMonPastEvolutionLevel(struct Pokemon *mon)
     return FALSE;
 }
 
+// Get the evolved species if the given species has a simple level-based evolution
+// that would have occurred at or before the given level.
+// Returns the original species if no level-based evolution is found.
+u16 GetSpeciesBasedOnLevel(u16 species, u8 level)
+{
+    int i;
+    u16 evolvedSpecies = species;
+    const struct Evolution *evolutions = GetSpeciesEvolutions(species);
+
+    if (evolutions == NULL)
+        return species;
+
+    // Look for the highest level evolution that has been reached
+    for (i = 0; evolutions[i].method != EVOLUTIONS_END; i++)
+    {
+        if (SanitizeSpeciesId(evolutions[i].targetSpecies) == SPECIES_NONE)
+            continue;
+
+        // Only consider EVO_LEVEL with no additional conditions
+        if (evolutions[i].method == EVO_LEVEL && evolutions[i].params == NULL)
+        {
+            if (evolutions[i].param <= level)
+            {
+                // Check if this evolution would result in an even higher level evolution
+                u16 nextEvolution = GetSpeciesBasedOnLevel(evolutions[i].targetSpecies, level);
+                evolvedSpecies = nextEvolution;
+            }
+        }
+    }
+
+    return evolvedSpecies;
+}
+
 u16 NationalPokedexNumToSpecies(enum NationalDexOrder nationalNum)
 {
     u16 species;

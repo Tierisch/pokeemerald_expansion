@@ -609,7 +609,9 @@ static bool8 TryGenerateWildMon(const struct WildPokemonInfo *wildMonInfo, enum 
     if (gMapHeader.mapLayoutId != LAYOUT_BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS && flags & WILD_CHECK_KEEN_EYE && !IsAbilityAllowingEncounter(level))
         return FALSE;
 
-    CreateWildMon(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    // Check if species should have evolved based on the scaled level
+    u16 species = GetSpeciesBasedOnLevel(wildMonInfo->wildPokemon[wildMonIndex].species, level);
+    CreateWildMon(species, level);
     return TRUE;
 }
 
@@ -618,6 +620,9 @@ static u16 GenerateFishingWildMon(const struct WildPokemonInfo *wildMonInfo, u8 
     u8 wildMonIndex = ChooseWildMonIndex_Fishing(rod);
     u16 wildMonSpecies = wildMonInfo->wildPokemon[wildMonIndex].species;
     u8 level = ChooseWildMonLevel(wildMonInfo->wildPokemon, wildMonIndex, WILD_AREA_FISHING);
+
+    // Check if species should have evolved based on the scaled level
+    wildMonSpecies = GetSpeciesBasedOnLevel(wildMonSpecies, level);
 
     UpdateChainFishingStreak();
     CreateWildMon(wildMonSpecies, level);
