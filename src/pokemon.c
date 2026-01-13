@@ -4956,9 +4956,14 @@ bool8 IsMonPastEvolutionLevel(struct Pokemon *mon)
 // These determine the probability of evolutions that aren't simple level triggers.
 
 // Wild encounter evolution chances
+// Guaranteed (100%) - for branching evolutions that should always happen at minimum level
+static const u16 sConditionalEvoGuaranteed_Wild[] = {
+    SPECIES_WURMPLE,
+    SPECIES_TYROGUE,
+};
+
 // High chance (50%)
 static const u16 sConditionalEvoHighChance_Wild[] = {
-    SPECIES_WURMPLE,
     SPECIES_AZURILL,
     SPECIES_HAPPINY,
     SPECIES_TOGEPI,
@@ -4985,9 +4990,14 @@ static const u16 sConditionalEvoLowChance_Wild[] = {
 };
 
 // Trainer battle evolution chances
+// Guaranteed (100%) - for branching evolutions that should always happen at minimum level
+static const u16 sConditionalEvoGuaranteed_Trainer[] = {
+    SPECIES_WURMPLE,
+    SPECIES_TYROGUE,
+};
+
 // High chance (50%)
 static const u16 sConditionalEvoHighChance_Trainer[] = {
-    SPECIES_WURMPLE,
     SPECIES_AZURILL,
     SPECIES_HAPPINY,
     SPECIES_TOGEPI,
@@ -5012,10 +5022,18 @@ static const u16 sConditionalEvoLowChance_Trainer[] = {
 static u8 GetConditionalEvolutionChance(u16 species, bool8 isWildBattle)
 {
     u32 i;
+    const u16 *guaranteedList = isWildBattle ? sConditionalEvoGuaranteed_Wild : sConditionalEvoGuaranteed_Trainer;
     const u16 *highChanceList = isWildBattle ? sConditionalEvoHighChance_Wild : sConditionalEvoHighChance_Trainer;
     const u16 *lowChanceList = isWildBattle ? sConditionalEvoLowChance_Wild : sConditionalEvoLowChance_Trainer;
+    u32 guaranteedCount = isWildBattle ? ARRAY_COUNT(sConditionalEvoGuaranteed_Wild) : ARRAY_COUNT(sConditionalEvoGuaranteed_Trainer);
     u32 highChanceCount = isWildBattle ? ARRAY_COUNT(sConditionalEvoHighChance_Wild) : ARRAY_COUNT(sConditionalEvoHighChance_Trainer);
     u32 lowChanceCount = isWildBattle ? ARRAY_COUNT(sConditionalEvoLowChance_Wild) : ARRAY_COUNT(sConditionalEvoLowChance_Trainer);
+    
+    for (i = 0; i < guaranteedCount; i++)
+    {
+        if (guaranteedList[i] == species)
+            return 1;
+    }
     
     for (i = 0; i < highChanceCount; i++)
     {
@@ -5076,6 +5094,11 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level, bool8 isWildBattle)
             if (evolutions[i].method == EVO_LEVEL_BATTLE_ONLY && evolutions[i].params == NULL)
                 continue;
             
+            // Skip conditional level evolutions if the level requirement isn't met
+            if ((evolutions[i].method == EVO_LEVEL || evolutions[i].method == EVO_LEVEL_BATTLE_ONLY)
+                && evolutions[i].params != NULL && evolutions[i].param > 0 && level < evolutions[i].param)
+                continue;
+            
             evolutionCount++;
         }
     }
@@ -5098,6 +5121,11 @@ u16 GetSpeciesBasedOnLevel(u16 species, u8 level, bool8 isWildBattle)
                 if (evolutions[i].method == EVO_LEVEL && evolutions[i].params == NULL)
                     continue;
                 if (evolutions[i].method == EVO_LEVEL_BATTLE_ONLY && evolutions[i].params == NULL)
+                    continue;
+                
+                // Skip conditional level evolutions if the level requirement isn't met
+                if ((evolutions[i].method == EVO_LEVEL || evolutions[i].method == EVO_LEVEL_BATTLE_ONLY)
+                    && evolutions[i].params != NULL && evolutions[i].param > 0 && level < evolutions[i].param)
                     continue;
                 
                 if (currentIndex == chosenEvolution)
